@@ -230,10 +230,10 @@
             letter-spacing: 0.5px;
         }
 
-        .badge.MARKDOWN { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-        .badge.REORDER { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-        .badge.REDISTRIBUTE { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-        .badge.ALERT { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge.MARKDOWN, .badge.DISCOUNT { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge.REORDER, .badge.ACCELERATE_SALES { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge.REDISTRIBUTE, .badge.REDUCE_NEXT_ORDER { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .badge.ALERT, .badge.LOG_WASTE { background: rgba(239, 68, 68, 0.2); color: #f87171; }
         .badge.HOLD { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
 
     </style>
@@ -247,39 +247,35 @@
             <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 0.9rem;">Edit JSON payload to simulate store conditions</p>
             <textarea id="json-input">
 {
-  "store_id": "STORE_001",
-  "date": "2026-05-16",
+  "storeName": "Bravo Koroğlu",
+  "departmentName": "Meyvə-Tərəvəz",
+  "past4WeeksWasteAZN": [180, 210, 245, 310],
   "products": [
     {
-      "name": "Organic Milk 1L",
-      "category": "Dairy",
-      "stock": 120,
-      "expiry_days": 2,
-      "daily_sales": 35,
-      "cost_price": 1.2,
-      "selling_price": 2.0,
-      "historical_sales": [30, 32, 28, 40, 38, 36, 35],
-      "temperature_risk": false,
-      "logistics_delay": false
+      "productId": 1,
+      "productName": "Yerli Banan",
+      "category": "FRUIT",
+      "quantity": 85.0,
+      "unit": "kq",
+      "costPrice": 1.50,
+      "sellPrice": 2.20,
+      "daysLeft": 1,
+      "hoursLeft": 24,
+      "urgency": "EXPIRING"
     },
     {
-      "name": "Fresh Strawberries",
-      "category": "Produce",
-      "stock": 45,
-      "expiry_days": 1,
-      "daily_sales": 10,
-      "cost_price": 3.0,
-      "selling_price": 5.5,
-      "historical_sales": [12, 10, 8, 15, 11, 9, 10],
-      "temperature_risk": true,
-      "logistics_delay": false
+      "productId": 2,
+      "productName": "Snikers Şokolad",
+      "category": "CONFECTIONERY",
+      "quantity": 120.0,
+      "unit": "ədəd",
+      "costPrice": 0.80,
+      "sellPrice": 1.50,
+      "daysLeft": 60,
+      "hoursLeft": 1440,
+      "urgency": "HOLD"
     }
-  ],
-  "external_factors": {
-    "weather": "hot",
-    "holiday": false,
-    "footfall_index": 1.12
-  }
+  ]
 }</textarea>
             <button onclick="analyzeData()">Analyze Data</button>
             <div class="loading" id="loading-indicator">Processing via Local Mistral AI...</div>
@@ -306,9 +302,12 @@
                     </div>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary);">
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary);" id="insight-box">
                     <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Key Intelligence Insight</div>
                     <strong style="font-size: 1.1rem;" id="val-issue"></strong>
+                    <div id="trend-alert" style="display:none; margin-top: 10px; color: var(--danger); font-weight: 600; font-size: 0.95rem; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px;">
+                        ⚠️ Diqqət: Ziyan trendi son 4 həftədə artan xətt üzrə gedir! Şöbə rəhbərliyinə hesabat göndərilməlidir.
+                    </div>
                 </div>
 
                 <!-- Recommendations -->
@@ -396,6 +395,15 @@
             else riskCard.classList.add('risk-low');
 
             document.getElementById('val-issue').textContent = summary.key_issue || "No significant issues identified based on current data.";
+
+            const trendAlert = document.getElementById('trend-alert');
+            if(summary.trend_alert) {
+                trendAlert.style.display = 'block';
+                document.getElementById('insight-box').style.borderLeftColor = 'var(--danger)';
+            } else {
+                trendAlert.style.display = 'none';
+                document.getElementById('insight-box').style.borderLeftColor = 'var(--primary)';
+            }
 
             // Recommendations
             const recList = document.getElementById('recommendations-list');
