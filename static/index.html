@@ -239,6 +239,11 @@
     </style>
 </head>
 <body>
+    <div style="width: 100%; padding: 15px 20px; background: var(--surface); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 30px; align-items: center;">
+        <div style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-right: 20px;">FreshGuard AI</div>
+        <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 1.05rem;">📊 Operational Waste</a>
+        <a href="/predict.html" style="color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 1.05rem;">🔮 Strategic Prediction</a>
+    </div>
 
     <div class="container">
         <!-- Input Panel -->
@@ -247,13 +252,13 @@
             <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 0.9rem;">Edit JSON payload to simulate store conditions</p>
             <textarea id="json-input">
 {
-  "storeName": "Bravo Koroğlu",
-  "departmentName": "Meyvə-Tərəvəz",
+  "storeName": "Bravo Koroglu",
+  "departmentName": "Fruit-Vegetable",
   "past4WeeksWasteAZN": [180, 210, 245, 310],
   "products": [
     {
       "productId": 1,
-      "productName": "Yerli Banan",
+      "productName": "Local Banana",
       "category": "FRUIT",
       "quantity": 85.0,
       "unit": "kq",
@@ -265,7 +270,7 @@
     },
     {
       "productId": 2,
-      "productName": "Snikers Şokolad",
+      "productName": "Snickers Chocolate",
       "category": "CONFECTIONERY",
       "quantity": 120.0,
       "unit": "ədəd",
@@ -306,7 +311,7 @@
                     <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Key Intelligence Insight</div>
                     <strong style="font-size: 1.1rem;" id="val-issue"></strong>
                     <div id="trend-alert" style="display:none; margin-top: 10px; color: var(--danger); font-weight: 600; font-size: 0.95rem; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px;">
-                        ⚠️ Diqqət: Ziyan trendi son 4 həftədə artan xətt üzrə gedir! Şöbə rəhbərliyinə hesabat göndərilməlidir.
+                        ⚠️ WARNING: Waste trend has been strictly increasing over the last 4 weeks! Department managers must be notified.
                     </div>
                 </div>
 

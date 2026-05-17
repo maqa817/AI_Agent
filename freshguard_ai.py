@@ -68,21 +68,21 @@ Your output MUST perfectly match this JSON structure:
     "total_predicted_waste_azn": number,
     "risk_level": "LOW | MEDIUM | HIGH",
     "trend_alert": "boolean",
-    "key_issue": "short explanation in Azerbaijani"
+    "key_issue": "short explanation in English"
   },
   "critical_products": [
     {
       "name": "string",
       "waste_azn": number,
       "risk_score": number,
-      "reason": "explanation including category risk if Fruit/Vegetable"
+      "reason": "explanation including category risk if Fruit/Vegetable in English"
     }
   ],
   "recommendations": [
     {
       "type": "DISCOUNT | ACCELERATE_SALES | REDUCE_NEXT_ORDER | LOG_WASTE | HOLD",
       "product": "string",
-      "action": "clear action sentence in Azerbaijani",
+      "action": "clear action sentence in English",
       "expected_impact": "AZN amount of money saved by this action"
     }
   ],
@@ -141,6 +141,73 @@ def analyze_retail_data(input_data: dict) -> dict:
             return json.loads(result_content)
         except json.JSONDecodeError:
             print("Warning: Model did not return valid JSON. Returning raw string.")
+            return {"raw_response": result_content}
+            
+    except Exception as e:
+        return {"error": str(e)}
+
+# ---------------------------------------------------------
+# PREDICTION AI (DEMAND FORECASTING)
+# ---------------------------------------------------------
+
+PREDICT_SYSTEM_PROMPT = """
+You are FreshGuard Forecast AI. 
+Your job is to predict next week's demand for a product to prevent waste BEFORE it even enters the store.
+You receive historical sales data, upcoming weather, and holiday info.
+You must output STRICT JSON.
+
+INPUT FORMAT:
+{
+  "productName": "string",
+  "historicalSales": [number, number, number, number],
+  "upcomingWeather": "HOT | COLD | NORMAL",
+  "upcomingHoliday": boolean
+}
+
+THINKING LOGIC:
+1. Calculate average of historicalSales.
+2. If weather is HOT: Drinks/Ice Cream go up, Heavy foods go down.
+3. If weather is COLD: Hot drinks/Bakery go up.
+4. If Holiday is true: Overall sales go up by 20%.
+
+OUTPUT FORMAT:
+{
+  "predicted_demand_next_week": number,
+  "confidence_score": number,
+  "ai_reasoning": "Explanation in English of why this amount should be ordered."
+}
+"""
+
+def predict_demand(input_data: dict) -> dict:
+    if isinstance(input_data, dict):
+        input_data_str = json.dumps(input_data, indent=2)
+    else:
+        input_data_str = str(input_data)
+
+    print("Predicting future demand (Mistral via Ollama)...")
+    
+    try:
+        response = ollama.chat(
+            model='mistral',
+            messages=[
+                {'role': 'system', 'content': PREDICT_SYSTEM_PROMPT},
+                {'role': 'user', 'content': input_data_str}
+            ],
+            options={
+                "temperature": 0.0,
+                "seed": 42,
+                "top_k": 1,
+                "top_p": 0.1,
+                "num_gpu": 99,
+                "num_ctx": 2048,
+            },
+            format='json'
+        )
+        
+        result_content = response['message']['content']
+        try:
+            return json.loads(result_content)
+        except json.JSONDecodeError:
             return {"raw_response": result_content}
             
     except Exception as e:

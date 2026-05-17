@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshGuard AI - Strategic Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --surface: #1e293b;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .nav-bar {
+            width: 100%; 
+            padding: 15px 20px; 
+            background: var(--surface); 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            display: flex; 
+            gap: 30px; 
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .panel {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 350px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #38bdf8;
+            font-family: monospace;
+            padding: 15px;
+            font-size: 0.9rem;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--primary);
+            font-weight: 600;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        #results-panel {
+            opacity: 0.3;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #results-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .score-box {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .value-large {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-right: 20px;">FreshGuard AI</div>
+        <a href="/" style="color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 1.05rem;">📊 Operational Waste</a>
+        <a href="/predict.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 1.05rem;">🔮 Strategic Prediction</a>
+    </div>
+
+    <div class="container">
+        <!-- Input Panel -->
+        <div class="panel">
+            <h2 style="margin-bottom: 15px; color: var(--text-main);">Demand Forecast Input</h2>
+            <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 0.9rem;">Edit JSON payload to simulate future conditions</p>
+            <textarea id="json-input">
+{
+  "productName": "Snickers Chocolate",
+  "historicalSales": [120, 115, 130, 125],
+  "upcomingWeather": "HOT",
+  "upcomingHoliday": false
+}</textarea>
+            <button onclick="predictData()">Predict Demand</button>
+            <div class="loading" id="loading-indicator">Forecasting via Local Mistral AI...</div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel" id="results-panel">
+            <h2 style="margin-bottom: 20px; color: var(--text-main);">Forecasting Results</h2>
+            
+            <div id="results-content" style="display: none;">
+                <div class="score-box">
+                    <div style="color: var(--text-muted); text-transform: uppercase; font-size: 0.9rem; font-weight: 600;">Predicted Demand (Next Week)</div>
+                    <div class="value-large" id="val-demand">--</div>
+                    <div style="font-size: 1.1rem; color: var(--success); font-weight: 600;">Confidence: <span id="val-confidence">--</span>%</div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary);">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">AI Strategic Reasoning</div>
+                    <strong style="font-size: 1.1rem; line-height: 1.5;" id="val-reasoning"></strong>
+                </div>
+            </div>
+            
+            <div id="empty-state" style="text-align: center; color: var(--text-muted); margin-top: 50px;">
+                Run prediction to see AI forecast logic here.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function predictData() {
+            const btn = document.querySelector('button');
+            const loader = document.getElementById('loading-indicator');
+            const resultsPanel = document.getElementById('results-panel');
+            const inputData = document.getElementById('json-input').value;
+
+            btn.disabled = true;
+            loader.style.display = 'block';
+
+            try {
+                // Ensure JSON is valid
+                const parsedData = JSON.parse(inputData);
+
+                // Send to backend Prediction Endpoint
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(parsedData)
+                });
+
+                const data = await response.json();
+                
+                if(data.error) {
+                    alert("Backend Error: " + data.error);
+                    return;
+                }
+
+                if(data.raw_response) {
+                    alert("AI output was not valid JSON. See console.");
+                    console.error(data.raw_response);
+                    return;
+                }
+
+                // Render Results
+                document.getElementById('empty-state').style.display = 'none';
+                document.getElementById('results-content').style.display = 'block';
+                resultsPanel.classList.add('active');
+
+                document.getElementById('val-demand').textContent = data.predicted_demand_next_week + " Units";
+                document.getElementById('val-confidence').textContent = data.confidence_score;
+                document.getElementById('val-reasoning').textContent = data.ai_reasoning;
+
+            } catch (error) {
+                alert("Error parsing JSON or connecting to server: " + error.message);
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

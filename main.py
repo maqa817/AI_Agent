@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-from freshguard_ai import analyze_retail_data
+from freshguard_ai import analyze_retail_data, predict_demand
 
 app = FastAPI(title="FreshGuard AI Backend")
 
@@ -16,12 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API Endpoint to receive data and return AI analysis
+# API Endpoint 1: Operational Waste Analysis (Current Shelves)
 @app.post("/api/analyze")
 async def analyze_data(request: Request):
     try:
         data = await request.json()
-        print("Received payload for analysis.")
+        print("Received payload for waste analysis.")
         
         result = analyze_retail_data(data)
         
@@ -31,6 +31,23 @@ async def analyze_data(request: Request):
         return result
     except Exception as e:
         print(f"Error during analysis: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+# API Endpoint 2: Strategic Demand Prediction (Future Orders)
+@app.post("/api/predict")
+async def predict_future_demand(request: Request):
+    try:
+        data = await request.json()
+        print("Received payload for future demand prediction.")
+        
+        result = predict_demand(data)
+        
+        if isinstance(result, dict) and "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+            
+        return result
+    except Exception as e:
+        print(f"Error during prediction: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 # Mount the static directory for the frontend
